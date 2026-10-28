@@ -2,9 +2,12 @@ package com.otofarma.kiosk
 
 import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.DisplayMetrics
+import kotlin.math.max
+import kotlin.math.min
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -27,13 +30,20 @@ class KioskActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
         val config = Configuration(newBase.resources.configuration)
         config.fontScale = 1f
-        // The 10.1-inch panel is 1280×800 px. Lock density so those pixels match the Figma frame.
-        config.densityDpi = DisplayMetrics.DENSITY_MEDIUM
+        if (isKioskPanel(newBase)) {
+            // The 10.1-inch panel is 1280×800 px. Lock density so those pixels match the Figma frame.
+            config.densityDpi = DisplayMetrics.DENSITY_MEDIUM
+        }
         super.attachBaseContext(newBase.createConfigurationContext(config))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedOrientation = if (isKioskPanel(this)) {
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+        }
         enableEdgeToEdge()
         setContent {
             val activity = this@KioskActivity
@@ -44,7 +54,9 @@ class KioskActivity : ComponentActivity() {
                     WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
             KioskTheme {
-                KioskApp()
+                KioskFrame {
+                    KioskApp()
+                }
             }
         }
     }
@@ -98,6 +110,13 @@ private fun KioskApp() {
             onOpen = { launchExam(context, KioskCatalog.service(route.serviceId).packageName) },
         )
     }
+}
+
+private fun isKioskPanel(context: Context): Boolean {
+    val metrics = context.resources.displayMetrics
+    val longSide = max(metrics.widthPixels, metrics.heightPixels)
+    val shortSide = min(metrics.widthPixels, metrics.heightPixels)
+    return longSide in 1200..1400 && shortSide in 700..900
 }
 
 private fun launchExam(context: android.content.Context, packageName: String?): Boolean {

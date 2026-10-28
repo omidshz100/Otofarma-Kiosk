@@ -9,8 +9,8 @@
     <supports-screens
         android:largeScreens="true"
         android:xlargeScreens="true"
-        android:normalScreens="false"
-        android:smallScreens="false" />
+        android:normalScreens="true"
+        android:smallScreens="true" />
 
     <application
         android:allowBackup="true"
@@ -22,7 +22,7 @@
             android:name=".KioskActivity"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
             android:exported="true"
-            android:screenOrientation="sensorLandscape"
+            android:screenOrientation="fullSensor"
             tools:ignore="DiscouragedApi">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
