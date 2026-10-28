@@ -1,7 +1,10 @@
 package com.otofarma.kiosk
 
 import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
+import android.util.DisplayMetrics
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -21,6 +24,14 @@ import androidx.core.view.WindowInsetsControllerCompat
  * Tablet launcher: area, specialty, service, then the page that opens the exam app.
  */
 class KioskActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: Context) {
+        val config = Configuration(newBase.resources.configuration)
+        config.fontScale = 1f
+        // The 10.1-inch panel is 1280×800 px. Lock density so those pixels match the Figma frame.
+        config.densityDpi = DisplayMetrics.DENSITY_MEDIUM
+        super.attachBaseContext(newBase.createConfigurationContext(config))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

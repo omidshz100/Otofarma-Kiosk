@@ -44,8 +44,8 @@ internal object KioskCatalog {
                             title = "Esame otoscopico",
                             tone = ServiceTone.Green,
                             glyph = ServiceGlyph.Glass,
-                            purposeTitle = "Guarda l'orecchio.",
-                            purposeBody = "Il video mostra come si guarda dentro l'orecchio. Guardi, poi fai lo stesso.",
+                            purposeTitle = "Guarda l’orecchio.",
+                            purposeBody = "Il video mostra come si guarda dentro l’orecchio. Guardi, poi fai lo stesso.",
                             buttonSubtitle = "Avvia otoscopia",
                         ),
                         hearingService(
@@ -54,7 +54,7 @@ internal object KioskCatalog {
                             tone = ServiceTone.Yellow,
                             glyph = ServiceGlyph.Wave,
                             purposeTitle = "Controlla come senti.",
-                            purposeBody = "Il video mostra l'esame, dal suono grave al suono acuto. Guardi, poi fai lo stesso.",
+                            purposeBody = "Il video mostra l’esame, dal suono grave al suono acuto. Guardi, poi fai lo stesso.",
                             buttonSubtitle = "Avvia teleaudiologia",
                         ),
                         hearingService(
@@ -66,7 +66,7 @@ internal object KioskCatalog {
                             purposeBody = "Qui si apre la prescrizione. Il video mostra i passi.",
                             buttonSubtitle = "Apri la prescrizione",
                             actionTitle = "Premi il pulsante giallo.",
-                            actionBody = "Si apre l'app della prescrizione.",
+                            actionBody = "Si apre l’app della prescrizione.",
                             photoCaption = "Il foglio",
                         ),
                     ),
@@ -164,7 +164,7 @@ private fun hearingService(
     title = title,
     tone = tone,
     glyph = glyph,
-    buttonTitle = "Apri l'app",
+    buttonTitle = "Apri l’app",
     buttonSubtitle = buttonSubtitle,
     blocks = listOf(
         KioskBlock(
@@ -173,7 +173,7 @@ private fun hearingService(
             body = purposeBody,
             mediaKind = MediaKind.Video,
             mediaLabel = "Video",
-            mediaCaption = "Come funziona l'esame",
+            mediaCaption = "Come funziona l’esame",
         ),
         KioskBlock(
             kicker = "Cosa fare",

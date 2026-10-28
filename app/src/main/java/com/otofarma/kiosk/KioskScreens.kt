@@ -1,6 +1,8 @@
 package com.otofarma.kiosk
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -42,35 +43,33 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.Image
-import com.otofarma.kiosk.R
 
 private val CardShape = RoundedCornerShape(20.dp)
 private val BarShape = RoundedCornerShape(24.dp)
+private val PillShape = RoundedCornerShape(999.dp)
+private val PlateShape = RoundedCornerShape(14.dp)
+
+private enum class BackKind { OnGreen, OnLight }
 
 @Composable
 internal fun AreaScreen(areas: List<KioskArea>, onPick: (KioskArea) -> Unit) {
     Column(Modifier.fillMaxSize().background(KioskMist)) {
-        Box(
-            Modifier.fillMaxWidth().height(156.dp).background(KioskWhite),
-            contentAlignment = Alignment.Center,
-        ) {
-            OtofarmaLogo(height = 104.dp)
-        }
+        LogoBar(barHeight = 168.dp, logoHeight = 140.dp)
         Column(
-            Modifier.weight(1f).fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
+            Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(start = 28.dp, end = 28.dp, top = 22.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            HintRow(title = "Scegli un'area", body = "Tocca una di queste.")
-            Spacer(Modifier.height(16.dp))
+            AreaIntro()
             ChoiceGrid(areas, Modifier.weight(1f)) { area ->
                 ChoiceCard(
                     title = area.title,
                     subtitle = area.subtitle,
                     disc = area.glyph.disc(),
+                    icon = area.glyph.icon(),
                     onClick = { onPick(area) },
-                    mark = {
-                        AreaMark(area.glyph, area.glyph.icon(), Modifier.fillMaxSize())
-                    },
                 )
             }
         }
@@ -83,27 +82,28 @@ internal fun SpecialtyScreen(
     onBack: () -> Unit,
     onPick: (KioskSpecialty) -> Unit,
 ) {
+    val hasChoices = area.specialties.isNotEmpty()
     Column(Modifier.fillMaxSize().background(KioskMist)) {
         GreenHeader(
             title = area.title,
-            hint = if (area.specialties.isEmpty()) "Tocca Indietro." else "Tocca una di queste.",
+            showChoices = hasChoices,
             onBack = onBack,
         )
-        if (area.specialties.isEmpty()) {
+        if (!hasChoices) {
             EmptyLine()
         } else {
             ChoiceGrid(
                 area.specialties,
-                Modifier.weight(1f).padding(horizontal = 24.dp, vertical = 20.dp),
+                Modifier
+                    .weight(1f)
+                    .padding(start = 28.dp, end = 28.dp, top = 20.dp, bottom = 24.dp),
             ) { specialty ->
                 ChoiceCard(
                     title = specialty.title,
                     subtitle = specialty.subtitle,
                     disc = specialty.glyph.disc(),
+                    icon = specialty.glyph.icon(),
                     onClick = { onPick(specialty) },
-                    mark = {
-                        SpecialtyMark(specialty.glyph, specialty.glyph.icon(), Modifier.fillMaxSize())
-                    },
                 )
             }
         }
@@ -117,20 +117,21 @@ internal fun ServiceScreen(
     onPick: (KioskService) -> Unit,
 ) {
     Column(Modifier.fillMaxSize().background(KioskMist)) {
-        LightBar()
-        Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
-            TitleRow(title = specialty.title, onBack = onBack)
-            Spacer(Modifier.height(8.dp))
-            if (specialty.services.isEmpty()) {
-                HintRow(title = "Tocca Indietro.", body = "Qui non c'è ancora una scelta.")
-                EmptyLine()
-            } else {
-                HintRow(title = "Metti il dito su un colore.", body = "Tocca una riga.")
-                Spacer(Modifier.height(12.dp))
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    specialty.services.forEach { service ->
-                        ServiceBar(service, Modifier.weight(1f)) { onPick(service) }
-                    }
+        LogoBar(barHeight = 132.dp, logoHeight = 112.dp)
+        SectionBar(title = specialty.title, onBack = onBack)
+        if (specialty.services.isEmpty()) {
+            EmptyLine()
+        } else {
+            Column(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp, vertical = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                ServiceHint()
+                specialty.services.forEach { service ->
+                    ServiceBar(service, Modifier.weight(1f)) { onPick(service) }
                 }
             }
         }
@@ -145,18 +146,14 @@ internal fun OpenScreen(
 ) {
     var blocked by remember(service.id) { mutableStateOf(false) }
     Column(Modifier.fillMaxSize().background(KioskMist)) {
-        LightBar(logoHeight = 72.dp)
-        TitleRow(
-            title = service.title,
-            onBack = onBack,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
-        )
+        LogoBar(barHeight = 132.dp, logoHeight = 112.dp)
+        SectionBar(title = service.title, onBack = onBack)
         Column(
             Modifier
                 .weight(1f)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 12.dp),
+                .padding(start = 32.dp, end = 32.dp, top = 20.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             service.blocks.forEachIndexed { index, block ->
@@ -173,8 +170,7 @@ internal fun OpenScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFFFF4C2))
-                    .padding(horizontal = 24.dp, vertical = 12.dp),
+                    .padding(horizontal = 32.dp, vertical = 10.dp),
             )
         }
         OpenButton(service.buttonTitle, service.buttonSubtitle) {
@@ -184,108 +180,151 @@ internal fun OpenScreen(
 }
 
 @Composable
-private fun LightBar(logoHeight: Dp = 84.dp) {
+private fun LogoBar(barHeight: Dp, logoHeight: Dp) {
     Box(
-        Modifier.fillMaxWidth().background(KioskWhite).padding(vertical = 14.dp),
+        Modifier.fillMaxWidth().height(barHeight).background(KioskWhite),
         contentAlignment = Alignment.Center,
     ) {
-        OtofarmaLogo(height = logoHeight)
+        LogoImage(logoHeight)
+        Box(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(KioskLine),
+        )
     }
 }
 
 @Composable
-private fun GreenHeader(title: String, hint: String, onBack: () -> Unit) {
+private fun GreenHeader(title: String, showChoices: Boolean, onBack: () -> Unit) {
     Column(
         Modifier
             .fillMaxWidth()
             .background(KioskGreen)
-            .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 22.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(start = 28.dp, end = 28.dp, top = 18.dp, bottom = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            BackChip(onGreen = true, onClick = onBack)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            BackChip(BackKind.OnGreen, onBack)
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                OtofarmaLogo(height = 36.dp, onPlate = true)
+                OtofarmaLogo(height = 44.dp, onPlate = true)
             }
-            Spacer(Modifier.width(148.dp))
+            Spacer(Modifier.size(width = 140.dp, height = 46.dp))
         }
-        Spacer(Modifier.height(12.dp))
-        Text(
-            "Sei nella pagina dopo.",
-            color = KioskWhite,
-            fontSize = 15.sp,
-            lineHeight = 20.sp,
-        )
-        Text(
-            title,
-            color = KioskWhite,
-            fontSize = 34.sp,
-            lineHeight = 40.sp,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            hint,
-            color = KioskWhite,
-            fontSize = 18.sp,
-            lineHeight = 24.sp,
+        Column(
+            Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                "Sei nella pagina dopo.",
+                color = KioskWhite,
+                fontSize = 15.sp,
+                lineHeight = 20.sp,
+                fontWeight = FontWeight.Medium,
+            )
+            Text(
+                title,
+                color = KioskWhite,
+                fontSize = 34.sp,
+                lineHeight = 40.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+            )
+            if (showChoices) {
+                Text(
+                    "Tocca una di queste.",
+                    color = KioskWhite,
+                    fontSize = 18.sp,
+                    lineHeight = 24.sp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionBar(title: String, onBack: () -> Unit) {
+    Box(Modifier.fillMaxWidth().height(96.dp).background(KioskWhite)) {
+        Row(
+            Modifier
+                .fillMaxSize()
+                .padding(start = 24.dp, end = 32.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            BackChip(BackKind.OnLight, onBack)
+            Text(
+                title,
+                color = KioskInk,
+                fontSize = 32.sp,
+                lineHeight = 40.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Box(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(KioskLine),
         )
     }
 }
 
 @Composable
-private fun TitleRow(title: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        BackChip(onGreen = false, onClick = onBack)
-        Text(
-            title,
-            color = KioskInk,
-            fontSize = 32.sp,
-            lineHeight = 38.sp,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = 16.dp).weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun BackChip(onGreen: Boolean, onClick: () -> Unit) {
+private fun BackChip(kind: BackKind, onClick: () -> Unit) {
+    val onGreen = kind == BackKind.OnGreen
     Surface(
         onClick = onClick,
         color = if (onGreen) KioskWhite else KioskGreenSoft,
-        shape = RoundedCornerShape(23.dp),
-        modifier = Modifier.height(46.dp).width(148.dp),
+        shape = PillShape,
+        modifier = if (onGreen) {
+            Modifier.size(width = 140.dp, height = 46.dp)
+        } else {
+            Modifier.height(64.dp)
+        },
     ) {
         Row(
-            Modifier.fillMaxSize(),
+            Modifier
+                .then(if (onGreen) Modifier.fillMaxSize() else Modifier.fillMaxHeight())
+                .padding(
+                    start = if (onGreen) 0.dp else 18.dp,
+                    end = if (onGreen) 0.dp else 22.dp,
+                ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = if (onGreen) {
+                Arrangement.Center
+            } else {
+                Arrangement.spacedBy(8.dp)
+            },
         ) {
-            Text(
-                "‹",
-                color = if (onGreen) KioskInk else KioskGreen,
-                fontSize = 28.sp,
-                lineHeight = 32.sp,
-                fontWeight = FontWeight.Medium,
+            Image(
+                painter = painterResource(
+                    if (onGreen) R.drawable.ic_kiosk_back else R.drawable.ic_kiosk_back_deep,
+                ),
+                contentDescription = null,
+                modifier = Modifier.size(if (onGreen) 22.dp else 28.dp),
             )
-            Spacer(Modifier.width(4.dp))
+            if (onGreen) Spacer(Modifier.width(6.dp))
             Text(
                 "Indietro",
-                color = if (onGreen) KioskInk else KioskGreen,
-                fontSize = 18.sp,
-                lineHeight = 22.sp,
-                fontWeight = FontWeight.Medium,
+                color = if (onGreen) KioskGreen else KioskGreenDeep,
+                fontSize = if (onGreen) 18.sp else 22.sp,
+                lineHeight = if (onGreen) 22.sp else 28.sp,
+                fontWeight = FontWeight.SemiBold,
             )
         }
     }
 }
 
 @Composable
-private fun OtofarmaLogo(height: Dp, onPlate: Boolean = false) {
+private fun OtofarmaLogo(height: Dp, onPlate: Boolean) {
     if (onPlate) {
-        Surface(color = KioskWhite, shape = RoundedCornerShape(12.dp)) {
+        Surface(color = KioskWhite, shape = PlateShape) {
             Box(Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
                 LogoImage(height)
             }
@@ -306,29 +345,49 @@ private fun LogoImage(height: Dp) {
 }
 
 @Composable
-private fun HintRow(title: String, body: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            Modifier.size(64.dp).clip(CircleShape).background(KioskGreenSoft),
-            contentAlignment = Alignment.Center,
-        ) {
-            FingerMark(KioskGreen, Modifier.size(34.dp))
+private fun AreaIntro() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Disc(KioskWhite, 48.dp) {
+            Glyph(R.drawable.ic_kiosk_finger, 28.dp)
         }
-        Column(Modifier.padding(start = 16.dp)) {
+        Column {
             Text(
-                title,
+                "Scegli un\u2019area",
                 color = KioskInk,
                 fontSize = 32.sp,
                 lineHeight = 38.sp,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                body,
+                "Tocca una di queste.",
                 color = KioskMuted,
-                fontSize = 20.sp,
-                lineHeight = 26.sp,
+                fontSize = 18.sp,
+                lineHeight = 24.sp,
             )
         }
+    }
+}
+
+@Composable
+private fun ServiceHint() {
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Disc(KioskWhite, 56.dp) {
+            Glyph(R.drawable.ic_kiosk_finger_large, 36.dp)
+        }
+        Text(
+            "Metti il dito su un colore.",
+            color = KioskInk,
+            fontSize = 32.sp,
+            lineHeight = 40.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 }
 
@@ -358,31 +417,29 @@ private fun ChoiceCard(
     title: String,
     subtitle: String,
     disc: Color,
+    icon: Int,
     onClick: () -> Unit,
-    mark: @Composable () -> Unit,
 ) {
     Column(
         Modifier
             .fillMaxSize()
-            .shadow(6.dp, CardShape)
+            .shadow(10.dp, CardShape, clip = false, ambientColor = KioskShadow, spotColor = KioskShadow)
             .clip(CardShape)
             .background(KioskWhite)
+            .border(1.dp, KioskLine, CardShape)
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 22.dp, vertical = 18.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
     ) {
-        Box(
-            Modifier.size(72.dp).clip(CircleShape).background(disc),
-            contentAlignment = Alignment.Center,
-        ) {
-            Box(Modifier.size(36.dp)) { mark() }
-        }
-        Spacer(Modifier.height(12.dp))
+        Disc(disc, 72.dp) { Glyph(icon, 34.dp) }
         Text(
             title,
             color = KioskInk,
             fontSize = 26.sp,
             lineHeight = 32.sp,
             fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
@@ -391,10 +448,20 @@ private fun ChoiceCard(
             color = KioskMuted,
             fontSize = 16.sp,
             lineHeight = 22.sp,
+            textAlign = TextAlign.Center,
             maxLines = 1,
         )
-        Spacer(Modifier.weight(1f))
-        ToccaPill(KioskGreenSoft, KioskGreen)
+        Text(
+            "Tocca",
+            color = KioskGreen,
+            fontSize = 15.sp,
+            lineHeight = 20.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .clip(PillShape)
+                .background(KioskGreenSoft)
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+        )
     }
 }
 
@@ -404,61 +471,57 @@ private fun ServiceBar(service: KioskService, modifier: Modifier, onClick: () ->
     Row(
         modifier
             .fillMaxWidth()
-            .heightIn(min = 108.dp)
-            .shadow(6.dp, BarShape)
+            .shadow(8.dp, BarShape, clip = false, ambientColor = KioskBarShadow, spotColor = KioskBarShadow)
             .clip(BarShape)
             .background(paint.bar)
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 22.dp, vertical = 16.dp),
+            .padding(horizontal = 28.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(22.dp),
     ) {
-        Box(
-            Modifier.size(72.dp).clip(CircleShape).background(KioskWhite),
-            contentAlignment = Alignment.Center,
-        ) {
-            ServiceMark(service.glyph, paint.icon, Modifier.size(36.dp))
-        }
+        Disc(KioskWhite, 72.dp) { Glyph(service.glyph.icon(), 36.dp) }
         Text(
             service.title,
             color = paint.onBar,
             fontSize = 32.sp,
-            lineHeight = 38.sp,
+            lineHeight = 40.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f).padding(horizontal = 18.dp),
+            modifier = Modifier.weight(1f),
         )
-        ToccaPill(KioskWhite, KioskInk)
+        Box(
+            Modifier
+                .height(64.dp)
+                .clip(PillShape)
+                .background(KioskWhite)
+                .padding(horizontal = 22.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                "Tocca",
+                color = KioskGreenDeep,
+                fontSize = 22.sp,
+                lineHeight = 28.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
     }
-}
-
-@Composable
-private fun ToccaPill(background: Color, text: Color) {
-    Text(
-        "Tocca",
-        color = text,
-        fontSize = 16.sp,
-        lineHeight = 20.sp,
-        fontWeight = FontWeight.SemiBold,
-        modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(background)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-    )
 }
 
 @Composable
 private fun SeesawRow(block: KioskBlock, mediaOnLeft: Boolean) {
     Row(
-        Modifier.fillMaxWidth().height(220.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        Modifier.fillMaxWidth().height(186.dp),
+        horizontalArrangement = Arrangement.spacedBy(28.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (mediaOnLeft) {
-            MediaPane(block, Modifier.weight(1f).fillMaxHeight())
+            MediaPane(block)
             CopyPane(block, Modifier.weight(1f).fillMaxHeight())
         } else {
             CopyPane(block, Modifier.weight(1f).fillMaxHeight())
-            MediaPane(block, Modifier.weight(1f).fillMaxHeight())
+            MediaPane(block)
         }
     }
 }
@@ -466,8 +529,8 @@ private fun SeesawRow(block: KioskBlock, mediaOnLeft: Boolean) {
 @Composable
 private fun CopyPane(block: KioskBlock, modifier: Modifier) {
     Column(
-        modifier.padding(horizontal = 8.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.Center,
+        modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
     ) {
         Text(
             block.kicker,
@@ -476,7 +539,6 @@ private fun CopyPane(block: KioskBlock, modifier: Modifier) {
             lineHeight = 18.sp,
             fontWeight = FontWeight.SemiBold,
         )
-        Spacer(Modifier.height(6.dp))
         Text(
             block.title,
             color = KioskInk,
@@ -484,58 +546,50 @@ private fun CopyPane(block: KioskBlock, modifier: Modifier) {
             lineHeight = 34.sp,
             fontWeight = FontWeight.SemiBold,
         )
-        Spacer(Modifier.height(8.dp))
         Text(
             block.body,
             color = KioskMuted,
             fontSize = 18.sp,
-            lineHeight = 24.sp,
+            lineHeight = 26.sp,
         )
     }
 }
 
 @Composable
-private fun MediaPane(block: KioskBlock, modifier: Modifier) {
-    val dark = block.mediaKind == MediaKind.Video
-    val shape = RoundedCornerShape(20.dp)
+private fun MediaPane(block: KioskBlock) {
+    val video = block.mediaKind == MediaKind.Video
     Column(
-        modifier
-            .shadow(4.dp, shape)
-            .clip(shape)
-            .background(if (dark) KioskGreenDeep else KioskGreenSoft)
+        Modifier
+            .width(460.dp)
+            .fillMaxHeight()
+            .clip(CardShape)
+            .background(if (video) KioskGreenDeep else KioskGreenSoft)
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        if (dark) {
-            Box(
-                Modifier.size(72.dp).clip(CircleShape).background(KioskWhite),
-                contentAlignment = Alignment.Center,
-            ) {
-                PlayMark(KioskGreenDeep, Modifier.size(32.dp))
-            }
-        } else {
-            PhotoMark(KioskGreen, Modifier.size(64.dp))
-        }
-        Spacer(Modifier.height(12.dp))
         Text(
             block.mediaLabel,
-            color = if (dark) KioskWhite else KioskGreen,
+            color = if (video) KioskGreenDeep else KioskWhite,
             fontSize = 14.sp,
             lineHeight = 18.sp,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-                .background(if (dark) Color.White.copy(alpha = 0.16f) else KioskWhite)
+                .clip(PillShape)
+                .background(if (video) KioskWhite else KioskGreen)
                 .padding(horizontal = 12.dp, vertical = 6.dp),
         )
-        Spacer(Modifier.height(8.dp))
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Glyph(
+                icon = if (video) R.drawable.ic_kiosk_play else R.drawable.ic_kiosk_photo,
+                size = if (video) 72.dp else 64.dp,
+            )
+        }
         Text(
             block.mediaCaption,
-            color = if (dark) KioskWhite else KioskInk,
+            color = if (video) KioskWhite else KioskGreenDeep,
             fontSize = 16.sp,
             lineHeight = 22.sp,
-            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Medium,
         )
     }
 }
@@ -555,7 +609,7 @@ private fun OpenButton(title: String, subtitle: String, onClick: () -> Unit) {
             title,
             color = KioskInk,
             fontSize = 40.sp,
-            lineHeight = 46.sp,
+            lineHeight = 48.sp,
             fontWeight = FontWeight.SemiBold,
         )
         Text(
@@ -582,12 +636,31 @@ private fun ColumnScope.EmptyLine() {
     }
 }
 
-private data class BarPaint(val bar: Color, val onBar: Color, val icon: Color)
+@Composable
+private fun Disc(color: Color, size: Dp, mark: @Composable () -> Unit) {
+    Box(
+        Modifier.size(size).clip(CircleShape).background(color),
+        contentAlignment = Alignment.Center,
+    ) {
+        mark()
+    }
+}
+
+@Composable
+private fun Glyph(icon: Int, size: Dp) {
+    Image(
+        painter = painterResource(icon),
+        contentDescription = null,
+        modifier = Modifier.size(size),
+    )
+}
+
+private data class BarPaint(val bar: Color, val onBar: Color)
 
 private fun ServiceTone.paint(): BarPaint = when (this) {
-    ServiceTone.Green -> BarPaint(Color(0xFF3AAA3A), KioskWhite, KioskGreenDeep)
-    ServiceTone.Yellow -> BarPaint(KioskYellow, KioskInk, Color(0xFF8A6A00))
-    ServiceTone.Red -> BarPaint(Color(0xFFE23B3B), KioskWhite, Color(0xFF8E1E1E))
+    ServiceTone.Green -> BarPaint(Color(0xFF3AAA3A), KioskWhite)
+    ServiceTone.Yellow -> BarPaint(KioskYellow, KioskYellowInk)
+    ServiceTone.Red -> BarPaint(Color(0xFFE23B3B), KioskWhite)
 }
 
 private fun AreaGlyph.disc(): Color = when (this) {
@@ -597,11 +670,11 @@ private fun AreaGlyph.disc(): Color = when (this) {
     AreaGlyph.Desk -> Color(0xFFF3EEF8)
 }
 
-private fun AreaGlyph.icon(): Color = when (this) {
-    AreaGlyph.Cross -> KioskGreen
-    AreaGlyph.Camera -> Color(0xFF1F6B8A)
-    AreaGlyph.Person -> Color(0xFFC46B2C)
-    AreaGlyph.Desk -> Color(0xFF6A4C93)
+private fun AreaGlyph.icon(): Int = when (this) {
+    AreaGlyph.Cross -> R.drawable.ic_kiosk_cross
+    AreaGlyph.Camera -> R.drawable.ic_kiosk_camera
+    AreaGlyph.Person -> R.drawable.ic_kiosk_person
+    AreaGlyph.Desk -> R.drawable.ic_kiosk_desk
 }
 
 private fun SpecialtyGlyph.disc(): Color = when (this) {
@@ -611,9 +684,15 @@ private fun SpecialtyGlyph.disc(): Color = when (this) {
     SpecialtyGlyph.Headphones -> KioskGreenSoft
 }
 
-private fun SpecialtyGlyph.icon(): Color = when (this) {
-    SpecialtyGlyph.Heart -> Color(0xFFC43B4E)
-    SpecialtyGlyph.Face -> Color(0xFFC46B2C)
-    SpecialtyGlyph.Tooth -> Color(0xFF1F6B8A)
-    SpecialtyGlyph.Headphones -> KioskGreen
+private fun SpecialtyGlyph.icon(): Int = when (this) {
+    SpecialtyGlyph.Heart -> R.drawable.ic_kiosk_heart
+    SpecialtyGlyph.Face -> R.drawable.ic_kiosk_face
+    SpecialtyGlyph.Tooth -> R.drawable.ic_kiosk_tooth
+    SpecialtyGlyph.Headphones -> R.drawable.ic_kiosk_headphones
+}
+
+private fun ServiceGlyph.icon(): Int = when (this) {
+    ServiceGlyph.Glass -> R.drawable.ic_kiosk_glass
+    ServiceGlyph.Wave -> R.drawable.ic_kiosk_wave
+    ServiceGlyph.Page -> R.drawable.ic_kiosk_page
 }
